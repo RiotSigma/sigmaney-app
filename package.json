@@ -1,0 +1,17 @@
+{
+  "name": "sigmaney-mobile",
+  "version": "1.0.0",
+  "description": "Sigmaney — мобильное приложение учёта финансов и чеков",
+  "private": true,
+  "scripts": {
+    "cap:init-android": "npx cap add android && node scripts/apply-android-config.mjs && npx cap sync android",
+    "cap:sync": "node scripts/apply-android-config.mjs && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}
