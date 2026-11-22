@@ -3,14 +3,7 @@
   "appName": "Sigmaney",
   "webDir": "www",
   "server": {
-    "androidScheme": "https",
-    "cleartext": true,
-    "allowNavigation": [
-      "script.google.com",
-      "script.googleusercontent.com",
-      "proverkacheka.com",
-      "*"
-    ]
+    "androidScheme": "https"
   },
   "android": {
     "allowMixedContent": true
