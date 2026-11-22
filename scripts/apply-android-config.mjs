@@ -1,47 +1,43 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from 'fs';
+import path from 'path';
 
 const manifestPath = path.resolve('android/app/src/main/AndroidManifest.xml');
-const mainActivityDest = path.resolve('android/app/src/main/java/com/sigmaney/app/MainActivity.java');
-const mainActivitySrc = path.resolve('android-overrides/MainActivity.java');
-const iconSrc = path.resolve('assets/icon-512.png');
-
 if (fs.existsSync(manifestPath)) {
-  let manifest = fs.readFileSync(manifestPath, 'utf8');
+  let xml = fs.readFileSync(manifestPath, 'utf8');
   const perms = [
+    '<uses-permission android:name="android.permission.INTERNET" />',
+    '<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />',
     '<uses-permission android:name="android.permission.CAMERA" />',
-    '<uses-feature android:name="android.hardware.camera" android:required="false" />',
-    '<uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />'
+    '<uses-feature android:name="android.hardware.camera" android:required="false" />'
   ];
-  for (const tag of perms) {
-    if (!manifest.includes(tag)) {
-      manifest = manifest.replace('<application', `    ${tag}\n    <application`);
+  perms.forEach(p => {
+    if (!xml.includes(p)) {
+      xml = xml.replace('<application', p + '\n    <application');
     }
+  });
+  if (!xml.includes('android:usesCleartextTraffic')) {
+    xml = xml.replace('<application', '<application android:usesCleartextTraffic="true"');
   }
-  fs.writeFileSync(manifestPath, manifest, 'utf8');
-  console.log('Patched AndroidManifest.xml with CAMERA permissions.');
+  fs.writeFileSync(manifestPath, xml, 'utf8');
+  console.log('Updated AndroidManifest.xml with CAMERA, INTERNET & cleartext permissions.');
 }
 
-if (fs.existsSync(mainActivitySrc)) {
-  fs.mkdirSync(path.dirname(mainActivityDest), { recursive: true });
-  fs.copyFileSync(mainActivitySrc, mainActivityDest);
-  console.log('Installed custom MainActivity.java for WebView camera support.');
+const mainActSrc = path.resolve('android-overrides/MainActivity.java');
+const mainActDst = path.resolve('android/app/src/main/java/com/sigmaney/app/MainActivity.java');
+if (fs.existsSync(mainActSrc) && fs.existsSync(path.dirname(mainActDst))) {
+  fs.copyFileSync(mainActSrc, mainActDst);
+  console.log('Copied custom MainActivity.java.');
 }
 
+const iconSrc = path.resolve('assets/icon-512.png');
+const resDirs = ['mipmap-mdpi', 'mipmap-hdpi', 'mipmap-xhdpi', 'mipmap-xxhdpi', 'mipmap-xxxhdpi'];
 if (fs.existsSync(iconSrc)) {
-  const resDir = path.resolve('android/app/src/main/res');
-  const anydpi = path.join(resDir, 'mipmap-anydpi-v26');
-  if (fs.existsSync(anydpi)) {
-    fs.rmSync(anydpi, { recursive: true, force: true });
-  }
-  const buckets = ['mipmap-mdpi', 'mipmap-hdpi', 'mipmap-xhdpi', 'mipmap-xxhdpi', 'mipmap-xxxhdpi'];
-  for (const b of buckets) {
-    const dir = path.join(resDir, b);
+  resDirs.forEach(d => {
+    const dir = path.resolve('android/app/src/main/res', d);
     if (fs.existsSync(dir)) {
       fs.copyFileSync(iconSrc, path.join(dir, 'ic_launcher.png'));
       fs.copyFileSync(iconSrc, path.join(dir, 'ic_launcher_round.png'));
-      fs.copyFileSync(iconSrc, path.join(dir, 'ic_launcher_foreground.png'));
     }
-  }
-  console.log('Applied Sigmaney Σ₽ launcher icons.');
+  });
+  console.log('Applied Sigmaney icon across mipmap folders.');
 }
